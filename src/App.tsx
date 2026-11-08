@@ -8,9 +8,17 @@ type PageProps = {
 };
 
 const Page = forwardRef<HTMLDivElement, PageProps>(({children, density = 'soft'}, ref) => {
+  // Let the browser scroll long mobile pages without the flip library taking the gesture.
+  const handleReadingTouch = (event: React.TouchEvent<HTMLDivElement>) => {
+    if (density === 'soft' && window.matchMedia('(max-width: 767px)').matches &&
+        event.currentTarget.scrollHeight > event.currentTarget.clientHeight) {
+      event.stopPropagation();
+    }
+  };
   return (
     <div className={`page ${density === 'hard' ? 'hard' : ''}`} ref={ref} data-density={density}>
-      <div className="page-content">{children}</div>
+      <div className="page-content" onTouchStartCapture={handleReadingTouch}
+        onTouchMoveCapture={handleReadingTouch} onTouchEndCapture={handleReadingTouch}>{children}</div>
     </div>
   );
 });
@@ -271,9 +279,9 @@ export default function App() {
           width={620}
           height={820}
           size="stretch"
-          minWidth={360}
+          minWidth={280}
           maxWidth={1200}
-          minHeight={500}
+          minHeight={300}
           maxHeight={1650}
           maxShadowOpacity={0.8}
           showCover={true}
@@ -288,8 +296,8 @@ export default function App() {
           onChangeOrientation={(e) => setBookOrientation(e.data)}
         >
           <Page density="hard">
-            <div className="h-full flex flex-col items-center justify-center text-center hand-drawn p-8 relative">
-              <div className="absolute top-4 right-4 w-20 h-20 rounded-full border-2 border-dashed border-slate-500/70 bg-sky-100/60 flex items-center justify-center rotate-8 shadow-sm">
+            <div className="cover-content h-full flex flex-col items-center justify-center text-center hand-drawn p-8 relative">
+              <div className="cover-badge w-20 h-20 rounded-full border-2 border-dashed border-slate-500/70 bg-sky-100/60 flex items-center justify-center rotate-8 shadow-sm">
                 <svg viewBox="0 0 100 100" className="w-16 h-16 text-slate-700" fill="none" stroke="currentColor">
                   <circle cx="50" cy="50" r="41" strokeWidth="2.5" strokeDasharray="4 4" />
                   <path d="M24 36 L40 36 L32 64" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
@@ -315,7 +323,7 @@ export default function App() {
                 <path d="M4 20 Q20 2 34 18 Q48 30 64 14 Q80 2 96 16" />
               </svg>
 
-              <h1 className="text-5xl md:text-7xl font-bold mb-6 text-gray-900 tracking-tighter leading-tight">御风·Future</h1>
+              <h1 className="cover-title text-5xl md:text-7xl font-bold mb-6 text-gray-900 tracking-tighter leading-tight">御风·Future</h1>
               <div className="hand-drawn-border inline-block px-8 py-3 mb-7 bg-[#fdfbf7]/70 backdrop-blur-sm">
                 <span className="text-2xl text-gray-800 font-bold">AI-COOL玩</span>
               </div>
@@ -380,7 +388,7 @@ export default function App() {
           </Page>
 
           <Page>
-            <div className="hand-drawn h-full flex flex-col">
+            <div className="about-page hand-drawn h-full flex flex-col">
               <h2 className="text-4xl font-bold mb-8 text-gray-800 inline-block highlight-yellow px-2">关于我</h2>
               <div className="flex-1 flex flex-col md:flex-row gap-8 items-center">
                 <div className="w-full md:w-2/5 flex justify-center relative">
