@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@source not "../public/before";
 
 @theme {
   --font-sans: "Comic Sans MS", "Chalkboard SE", "Marker Felt", sans-serif;

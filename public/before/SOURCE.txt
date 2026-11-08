@@ -1,0 +1,5 @@
+Historical replay: first real deployment
+Source commit: f46b4aad3a7c0beec31c5607b5ae0ab169ca105c
+Build: npm run build -- --base=/flipbook-homepage/before/
+Purpose: reproduce the original mobile title overlap and clipped text for a before/after recording.
+The current site remains at /flipbook-homepage/.
