@@ -32,4 +32,4 @@ npm run preview
 
 Vite 的 `base` 设为 `/flipbook-homepage/`，头像使用 `import.meta.env.BASE_URL`，避免子目录部署时丢失图片。更改仓库名或切换独立域名时，需要同步修改 `base`。
 
-不要上传真实密钥、`.env.local`、`node_modules` 或编辑器配置。联系页目前保留原型中的示例邮箱及展示项，尚未接入真实联系方式。
+不要上传真实密钥、`.env.local`、`node_modules` 或编辑器配置。联系页点击信封显示邮箱，再次点击收起；社交平台名称目前仍为展示文字。

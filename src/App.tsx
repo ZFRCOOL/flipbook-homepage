@@ -94,6 +94,37 @@ function ProfilePhoto() {
   </div>;
 }
 
+function ContactCard() {
+  const [isOpen, setIsOpen] = useState(false);
+  return <div className="contact-card w-full text-center">
+    <button type="button" className="group mx-auto block max-w-full" aria-label="显示或收起邮箱"
+      aria-expanded={isOpen} aria-controls="contact-email"
+      onMouseDownCapture={event => event.stopPropagation()} onMouseUpCapture={event => event.stopPropagation()}
+      onTouchStartCapture={event => event.stopPropagation()} onTouchEndCapture={event => event.stopPropagation()}
+      onTouchMoveCapture={event => event.stopPropagation()} onClick={(event) => {
+        event.stopPropagation(); setIsOpen(open => !open);
+      }}>
+      <svg width="250" height="180" viewBox="0 0 200 150" fill="none" stroke="#2c2c2c"
+        strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+        className="pointer-events-none max-w-full group-hover:-translate-y-1 transition-transform duration-300">
+        <rect x="10" y="20" width="180" height="110" rx="5" fill="#fdfbf7" />
+        <path d="M10 20 L100 80 L190 20" fill="rgba(181, 234, 215, 0.3)" />
+        <path d="M10 130 L80 80" /><path d="M190 130 L120 80" />
+        <rect x="150" y="30" width="30" height="35" strokeDasharray="2,2" fill="rgba(255, 183, 178, 0.3)" />
+        <circle cx="165" cy="47" r="8" /><path d="M155 40 Q165 35 175 40" />
+      </svg>
+    </button>
+    <div id="contact-email" hidden={!isOpen} className="mt-6" aria-live="polite">
+      <p className="text-xl md:text-2xl font-bold text-gray-800 mb-4 break-all select-all">zfrcool2001@gmail.com</p>
+      <div className="flex flex-wrap justify-center gap-4">
+        <span className="text-lg underline decoration-2 underline-offset-4 hover:text-blue-600 highlight-yellow">GitHub</span>
+        <span className="text-lg underline decoration-2 underline-offset-4 hover:text-blue-600 highlight-blue">小红书</span>
+        <span className="text-lg underline decoration-2 underline-offset-4 hover:text-blue-600 highlight-pink">抖音</span>
+      </div>
+    </div>
+  </div>;
+}
+
 const timelineItems = [
   {
     year: '2023年 - 毕业入职',
@@ -537,36 +568,7 @@ export default function App() {
           <Page>
             <div className="hand-drawn h-full flex flex-col items-center justify-center text-center">
               <h2 className="text-5xl font-bold mb-14 text-gray-800 highlight-pink px-4">联系我吧！</h2>
-              <div className="relative group cursor-pointer" onClick={() => alert('联系方式展示区')}>
-                <svg
-                  width="250"
-                  height="180"
-                  viewBox="0 0 200 150"
-                  fill="none"
-                  stroke="#2c2c2c"
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="group-hover:-translate-y-4 transition-transform duration-300"
-                >
-                  <rect x="10" y="20" width="180" height="110" rx="5" fill="#fdfbf7" />
-                  <path d="M10 20 L100 80 L190 20" fill="rgba(181, 234, 215, 0.3)" />
-                  <path d="M10 130 L80 80" />
-                  <path d="M190 130 L120 80" />
-                  <rect x="150" y="30" width="30" height="35" strokeDasharray="2,2" fill="rgba(255, 183, 178, 0.3)" />
-                  <circle cx="165" cy="47" r="8" />
-                  <path d="M155 40 Q165 35 175 40" />
-                </svg>
-
-                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-                  <p className="text-2xl font-bold text-gray-800 mb-4">creating@future.com</p>
-                  <div className="flex justify-center gap-4">
-                    <span className="text-lg underline decoration-2 underline-offset-4 hover:text-blue-600 highlight-yellow">GitHub</span>
-                    <span className="text-lg underline decoration-2 underline-offset-4 hover:text-blue-600 highlight-blue">小红书</span>
-                    <span className="text-lg underline decoration-2 underline-offset-4 hover:text-blue-600 highlight-pink">抖音</span>
-                  </div>
-                </div>
-              </div>
+              <ContactCard />
             </div>
           </Page>
 
