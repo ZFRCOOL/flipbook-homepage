@@ -8,6 +8,42 @@ type PageProps = {
 };
 
 const Page = forwardRef<HTMLDivElement, PageProps>(({children, density = 'soft'}, ref) => {
+  const readerRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [fit, setFit] = useState({scale: 1, height: 0});
+  const [hasMore, setHasMore] = useState(false);
+  useEffect(() => {
+    if (density === 'hard') return;
+    const reader = readerRef.current!;
+    const content = contentRef.current!;
+    const mobile = window.matchMedia('(max-width: 767px)');
+    let frame = 0;
+    const measure = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        if (!mobile.matches) {
+          setFit(previous => previous.height === 0 ? previous : {scale: 1, height: 0});
+          setHasMore(false);
+          return;
+        }
+        const style = getComputedStyle(reader);
+        const available = reader.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom);
+        const natural = content.offsetHeight;
+        if (available <= 0 || natural <= 0) return;
+        // Keep small text readable; longer pages remain scrollable.
+        const scale = Math.min(1, Math.max(0.88, available / natural));
+        const height = Math.ceil(natural * scale);
+        setFit(previous => previous.scale === scale && previous.height === height ? previous : {scale, height});
+        setHasMore(height - available - reader.scrollTop > 4);
+      });
+    };
+    const observer = new ResizeObserver(measure);
+    observer.observe(reader);
+    observer.observe(content);
+    mobile.addEventListener('change', measure);
+    measure();
+    return () => { observer.disconnect(); mobile.removeEventListener('change', measure); cancelAnimationFrame(frame); };
+  }, [density]);
   // Let the browser scroll long mobile pages without the flip library taking the gesture.
   const handleReadingTouch = (event: React.TouchEvent<HTMLDivElement>) => {
     if (density === 'soft' && window.matchMedia('(max-width: 767px)').matches &&
@@ -17,13 +53,46 @@ const Page = forwardRef<HTMLDivElement, PageProps>(({children, density = 'soft'}
   };
   return (
     <div className={`page ${density === 'hard' ? 'hard' : ''}`} ref={ref} data-density={density}>
-      <div className="page-content" onTouchStartCapture={handleReadingTouch}
-        onTouchMoveCapture={handleReadingTouch} onTouchEndCapture={handleReadingTouch}>{children}</div>
+      <div ref={readerRef} className="page-content" onTouchStartCapture={handleReadingTouch}
+        onTouchMoveCapture={handleReadingTouch} onTouchEndCapture={handleReadingTouch}
+        onScroll={(event) => {
+          const reader = event.currentTarget;
+          setHasMore(reader.scrollHeight - reader.clientHeight - reader.scrollTop > 4);
+        }}>
+        {density === 'hard' ? children : <div className="page-fit-stage" style={fit.height ? {height: fit.height} : undefined}>
+          <div ref={contentRef} className="page-fit-content" style={fit.height ? {transform: `scale(${fit.scale})`} : undefined}>{children}</div>
+        </div>}
+      </div>
+      {density === 'soft' && hasMore && <div className="reading-hint" aria-live="polite">下方还有内容 · 向上滑动 ↑</div>}
     </div>
   );
 });
 
 Page.displayName = 'Page';
+
+function ProfilePhoto() {
+  const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
+  const [attempt, setAttempt] = useState(0);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setStatus(current => current === 'loading' ? 'error' : current), 12000);
+    return () => window.clearTimeout(timeout);
+  }, [attempt]);
+  const suffix = attempt ? `?retry=${attempt}` : '';
+  return <div className="profile-photo">
+    <img src={`${import.meta.env.BASE_URL}profile-photo-640.webp${suffix}`}
+      srcSet={`${import.meta.env.BASE_URL}profile-photo-320.webp${suffix} 320w, ${import.meta.env.BASE_URL}profile-photo-640.webp${suffix} 640w`}
+      sizes="(max-width: 767px) 112px, 280px" width={640} height={640}
+      loading="eager" decoding="async" fetchPriority="high" alt="御风未来头像"
+      className={`w-full h-[280px] md:h-[340px] object-cover rounded-[18px] border-2 border-gray-700 ${status === 'loaded' ? '' : 'opacity-0'}`}
+      onLoad={() => setStatus('loaded')} onError={() => setStatus('error')} />
+    {status !== 'loaded' && <div className="photo-status" role="status">
+      <span className="text-3xl" aria-hidden="true">御风</span>
+      {status === 'error' ? <button type="button" onClick={(event) => {
+        event.stopPropagation(); setStatus('loading'); setAttempt(value => value + 1);
+      }}>头像未加载，点此重试</button> : <span>头像加载中…</span>}
+    </div>}
+  </div>;
+}
 
 const timelineItems = [
   {
@@ -171,7 +240,7 @@ export default function App() {
   }, []);
 
   return (
-    <div className="w-full h-screen flex items-center justify-center relative overflow-hidden">
+    <div className="site-shell w-full h-screen flex items-center justify-center relative overflow-hidden">
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="personal-bg-gradient" />
         <div className="personal-bg-grid hand-drawn" />
@@ -270,7 +339,7 @@ export default function App() {
       {/* 合书状态（仅封面/仅封底）时整体平移半页宽，让单页居中呈“合上的书”；
           平移过渡与翻页动画同为 700ms，翻开时书滑回展开位 */}
       <div
-        className={`relative z-10 w-[92vw] h-[88vh] max-w-[1400px] max-h-[920px] mx-auto transition-transform duration-700 ease-in-out ${
+        className={`book-shell relative z-10 w-[92vw] h-[88vh] max-w-[1400px] max-h-[920px] mx-auto transition-transform duration-700 ease-in-out ${
           bookOrientation !== 'landscape' ? '' : bookPage === 0 ? 'book-closed-start' : bookPageCount > 0 && bookPage === bookPageCount - 1 ? 'book-closed-end' : ''
         }`}
       >
@@ -395,7 +464,7 @@ export default function App() {
                   <div className="absolute inset-0 bg-emerald-100/50 rounded-full blur-xl transform -rotate-6 scale-110" />
                   <div className="relative z-10 w-[240px] md:w-[280px] hand-drawn-border bg-[#fdfbf7]/95 shadow-[0_12px_28px_rgba(0,0,0,0.18)] rotate-[-2deg]">
                     <span className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-5 bg-yellow-200/90 border border-dashed border-gray-500 rotate-3" />
-                    <img src={`${import.meta.env.BASE_URL}profile-photo.png`} alt="御风未来头像" className="w-full h-[280px] md:h-[340px] object-cover rounded-[18px] border-2 border-gray-700" />
+                    <ProfilePhoto />
                     <p className="text-xs text-gray-600 mt-3 text-center tracking-[0.18em]">YU FENG FUTURE</p>
                   </div>
                 </div>
